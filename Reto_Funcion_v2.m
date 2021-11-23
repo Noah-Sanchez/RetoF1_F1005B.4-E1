@@ -39,9 +39,10 @@ disp(['Valor de d = ', num2str(d)]);
 funcion = 'Y = ' + string(a) + 'x^3 + ' + string(b) + 'x^2 + ' + string(c) + 'x + ' + string(d);
 disp(funcion);
 
-% Dibujamos las funciónes en una gráfica
-figure('Name', ' Función cúbicca', 'NumberTitle', 'off');
-hold on;
+%-----------------------------------------------------------------
+% Máximos y Mínimos
+%-----------------------------------------------------------------
+
 %funcion
 f1 = @(x) a * x.^3 + b * x.^2 + c * x + d;
 
@@ -51,82 +52,70 @@ f2 = @(x) 3 * a * x.^2 + 2 * b*x + c;
 %Segunda derivada
 f3 = @(x) 6 * a * x + 2 * b;
 
-fplot(f1);hold on;
-fplot(f2);hold on;
-fplot(f3);hold on;
-
 %Puntos maximos y minimo
-xmax = (-b - sqrt(b^2-3*a*c))/(3*a);
-xmin = (-b + sqrt(b^2-3*a*c))/(3*a);
+xMax = (- b - sqrt(b^2 - 3  *a *c)) / (3 * a);
+xMin = (- b + sqrt(b^2 - 3 * a*c)) / (3 * a);
 
-display("La posicion x del maximo es "+xmax);
-display("La posicion x del minimo es "+xmin);
+yMax = f1(xMax);
+yMin = f1(xMin);
 
-%Longitud de la curva
+% Desplegar los valores del punto máximo y mínimo
+disp(' ')
+disp(['Punto máximo = ', '(', num2str(xMax), ', ', num2str(yMax), ')']);
+disp(['Punto mínimo = ', '(', num2str(xMin), ', ', num2str(yMin), ')']);
 
-% Calculamos la longitud de la curva utilizando la siguiente función
+%-----------------------------------------------------------------
+% Longitud de la curva
+%-----------------------------------------------------------------
+
+% Calculamo la longitud de la curva utilizando la siguiente función
 len = @(x) sqrt(1 + f2(x).^2);
-longitudCurva = integral(len, 10, 260); 
-
-% Metodo del rectangulo
-lim_inf = 10;
-lim_sup = 260;
-
-iteraciones = 1000;
-ancho = (lim_sup - lim_inf) / iteraciones;
-longitud = 0;
-
-% Algoritmo rectángulo
-for i = 0:(iteraciones - 1)
-    longitud = longitud + ancho * sqrt(1 + f2(a + i * ancho)^2);
-end
+longitudCurva = integral(len, 10, 260);
 
 % Desplegar el resultado de la longitud de curva
 disp(' ');
 disp(['Longitud de la curva:  ', num2str(longitudCurva)]);
 
-% Desplegar el resultado de la longitud de curva usando método del
-% rectangulo
-disp(['Longitud de la curva (método del rectángulo):  ', num2str(longitud)]);
 
-% Calcular y desplegar la diferencia
-diff = abs(longitudCurva - longitud);
-disp(['Diferencia entre métodos: ', num2str(diff)]);
-
+%-----------------------------------------------------------------
+% Radio de la curvatura
+%-----------------------------------------------------------------
 
 %Radio de la curvatura
-radio = @(x) (len(x).^3)/abs(f3(x));
-r_max = radio(xmax);
+r_curv = @(x) ((1 + (f2(x).^2)).^(3/2))/abs(f3(x));
 
-display("El radio de la curvatura en el punto maximo es: "+ r_max);
+%Calculamos la curvatura en el máximo y mínimo
+c_max = r_curv(xMax);
+c_min = r_curv(xMin);
 
-fplot(radio);hold on;
+% Desplegamos los valores de ambos radios
+disp(' ');
+disp(['Radio en el punto máximo = ', num2str(c_max)]);
+disp(['Radio en el punto mínimo = ', num2str(c_min)]);
 
-%Recta Tangente
-pendienteMin =  3 * a * xmin^2 + 2 * b*xmin + c;
-MinY = @(x) pendienteMin .* (x - xmin) + ymin;
+%-----------------------------------------------------------------
+% Graficación
+%-----------------------------------------------------------------
+
+figure('Name', ' Función cúbicca', 'NumberTitle', 'off');
+xlabel('Eje x (m)');
+ylabel('Eje y (m)');
+
+%Graficamos los círculos y radios
+viscircles([xMax (f1(xMax)-c_max)], c_max);
+viscircles([xMin (f1(xMin)+c_min)], c_min);
+line([xMin xMin], [f1(xMin) (f1(xMin)+c_min)]);
+line([xMax xMax], [f1(xMax) (f1(xMax)-c_max)]);
+
+% Graficamos las 3 funciones que obtuvimos 
 hold on;
-fplot(MinY);
+fplot(f1); 
+fplot(f2); 
+fplot(f3);
 
-pendienteMax = 3 * a * xmax^2 + 2 * b*xmax + c;
-MaxY = @(x) pendienteMax .* (x - xmax) + ymax;
-hold on;
-fplot(MaxY);
-
-% Ubicacion de las gradas 
-%Coordenadas de las gradas en el punto mínimo
-gInicioMin = [xmin - 40,yMin - 20];
-gFinMin = [xmin + 40, yMin - 20];
-
-%Coordenadas de las gradas en el punto máximo
-gInicioMax = [xmax - 40,yMax + 20];
-gFinMax = [xmax + 40, yMax + 20];
-
-%Gráfica de las gradas
-hold on;
-plot([gInicioMin(1),gFinMin(1)],[gInicioMin(2),gFinMin(2)],'r');
-hold on;
-plot([gInicioMax(1),gFinMax(1)],[gInicioMax(2),gFinMax(2)],'r');
+% Grafica el punto máximo y el punto mínimo
+plot(xMax, yMax, '*')
+plot(xMin, yMin, '*')
 
 % Graficamos los puntos iniciales
 plot(10, 290, 'o');
@@ -134,4 +123,52 @@ plot(79, 316, 'o');
 plot(164, 160, 'o');
 plot(260, 180, 'o');
 
+%Intervalos de la zona critica
+i_crit = [0];
+for i = 0:1:280
+   if (r_curv(i) > 50 && r_curv(i+1) < 50) || (r_curv(i) < 50 && r_curv(i+1) > 50)
+       disp("Intervalo critico: " + i)
+       i_crit = [i_crit, i];
+   end
+end
+i_crit = [i_crit, 280];
+sw = 0;
 
+%Ploteamos los intervalos
+for i = 1:1:size(i_crit,2)-1
+   if sw == 1
+       fplot(f1, [(i_crit(i)) (i_crit(i+1))], Color='#0000FF')
+   end
+   if sw == 0
+       fplot(f1, [(i_crit(i)) (i_crit(i+1))], Color='#FF0000')
+   end
+   plot(i_crit(i), f1(i_crit(i)),'o',Color='#0000FF')
+   sw = 1 - sw;
+end
+
+% %Recta tangnete
+xpendmin = 3 * a * xMin^2 + 2 * b*xMin + c;
+ytang = @(x) xpendmin .* (x - xMin) + yMin;
+hold on;
+fplot(ytang);
+
+xpendmax = 3 * a * xMax^2 + 2 * b*xMax + c;
+ytang = @(x) xpendmax .* (x - xMax) + yMax;
+hold on;
+fplot(ytang);
+
+
+% % Ubicacion de las gradas 
+%Coordenadas de las gradas en el punto mínimo
+gInicioMin = [xMin - 40,yMin - 20];
+gFinMin = [xMin + 40, yMin - 20];
+
+%Coordenadas de las gradas en el punto máximo
+gInicioMax = [xMax - 40,yMax + 20];
+gFinMax = [xMax + 40, yMax + 20];
+
+%Gráfica de las gradas
+hold on;
+plot([gInicioMin(1),gFinMin(1)],[gInicioMin(2),gFinMin(2)],'r');
+hold on;
+plot([gInicioMax(1),gFinMax(1)],[gInicioMax(2),gFinMax(2)],'r');
