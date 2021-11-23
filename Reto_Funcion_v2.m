@@ -51,9 +51,9 @@ f2 = @(x) 3 * a * x.^2 + 2 * b*x + c;
 %Segunda derivada
 f3 = @(x) 6 * a * x + 2 * b;
 
-%fplot(f1);hold on;
-%fplot(f2);hold on;
-%fplot(f3);hold on;
+fplot(f1);hold on;
+fplot(f2);hold on;
+fplot(f3);hold on;
 
 %Puntos maximos y minimo
 xmax = (-b - sqrt(b^2-3*a*c))/(3*a);
@@ -64,88 +64,74 @@ display("La posicion x del minimo es "+xmin);
 
 %Longitud de la curva
 
-long = @(x) sqrt(1 + f2(x).^2);
-longitud = integral(long,0,3);
-display("La longitud de la curva es de: " + longitud);
+% Calculamos la longitud de la curva utilizando la siguiente función
+len = @(x) sqrt(1 + f2(x).^2);
+longitudCurva = integral(len, 10, 260); 
+
+% Metodo del rectangulo
+lim_inf = 10;
+lim_sup = 260;
+
+iteraciones = 1000;
+ancho = (lim_sup - lim_inf) / iteraciones;
+longitud = 0;
+
+% Algoritmo rectángulo
+for i = 0:(iteraciones - 1)
+    longitud = longitud + ancho * sqrt(1 + f2(a + i * ancho)^2);
+end
+
+% Desplegar el resultado de la longitud de curva
+disp(' ');
+disp(['Longitud de la curva:  ', num2str(longitudCurva)]);
+
+% Desplegar el resultado de la longitud de curva usando método del
+% rectangulo
+disp(['Longitud de la curva (método del rectángulo):  ', num2str(longitud)]);
+
+% Calcular y desplegar la diferencia
+diff = abs(longitudCurva - longitud);
+disp(['Diferencia entre métodos: ', num2str(diff)]);
+
 
 %Radio de la curvatura
-radio = @(x) (long(x).^3)/abs(f3(x));
+radio = @(x) (len(x).^3)/abs(f3(x));
 r_max = radio(xmax);
 
 display("El radio de la curvatura en el punto maximo es: "+ r_max);
 
-%fplot(radio);hold on;
-axis equal;
-% Graficamos los puntos iniciales
-%plot(10, 290, 'o');
-%plot(79, 316, 'o');
-%plot(164, 160, 'o');
-%plot(260, 180, 'o');
-
-%Graficamos el maximo y minimo
-plot(xmax, f1(xmax), 'o');
-plot(xmin, f1(xmin), 'o');
-
-
-%Radio de la curvatura
-r_curv = @(x) ((1 + (f2(x).^2)).^(3/2))/abs(f3(x));
-
-%Calculamos la curvatura en el maximo y minimo
-c_max = r_curv(xmax);
-c_min = r_curv(xmin);
-
-%Graficamos los circulos y radios
-%viscircles([xmax (f1(xmax)-c_max)], c_max);
-%viscircles([xmin (f1(xmin)+c_min)], c_min);
-
-%line([xmin xmin], [f1(xmin) (f1(xmin)+c_min)]);
-%line([xmax xmax], [f1(xmax) (f1(xmax)-c_max)]);
-
-%Intervalos de la zona critica
-i_crit = [0];
-for i = 0:1:280
-    if (r_curv(i) > 50 && r_curv(i+1) < 50)
-        disp("Intervalo critico empieza: (" + i + ", " + f1(i) + ")")
-        i_crit = [i_crit, (i+1)];
-    elseif (r_curv(i) < 50 && r_curv(i+1) > 50)
-        disp("Intervalo critico termina: (" + i + ", " + f1(i) + ")")
-        disp(" ")
-        i_crit = [i_crit, (i+1)];
-    end
-end
-i_crit = [i_crit, 280];
-
-sw = 0;
-%Ploteamos los intervalos
-for i = 1:1:size(i_crit,2)-1
-    if sw == 1
-        fplot(f1, [(i_crit(i)) (i_crit(i+1))], Color='#0000FF')
-    end
-    if sw == 0
-        fplot(f1, [(i_crit(i)) (i_crit(i+1))], Color='#FF0000')
-    end
-    plot(i_crit(i), f1(i_crit(i)),'o',Color='#0000FF')
-    sw = 1 - sw;
-end
-
-xlabel("Eje X")
-ylabel("Eje Y")
-
+fplot(radio);hold on;
 
 %Recta Tangente
-g_x = [];
-g_y = [];
-for i = 0:1:280
-m = f2(i);
-tang = @(x) (m*(x-i)) + f1(i);
-di=0;
-d = 0;
-while d < 20
-    di = di + 0.1;
-    d = sqrt(((i-(i+di))^2)+((f1(i)-tang(i+di)))^2);
-end
-g_x = [g_x, i+di];
-g_y = [g_y, tang(i+di)];
-end
-plot(g_x, g_y)
+pendienteMin =  3 * a * xmin^2 + 2 * b*xmin + c;
+MinY = @(x) pendienteMin .* (x - xmin) + ymin;
+hold on;
+fplot(MinY);
+
+pendienteMax = 3 * a * xmax^2 + 2 * b*xmax + c;
+MaxY = @(x) pendienteMax .* (x - xmax) + ymax;
+hold on;
+fplot(MaxY);
+
+% Ubicacion de las gradas 
+%Coordenadas de las gradas en el punto mínimo
+gInicioMin = [xmin - 40,yMin - 20];
+gFinMin = [xmin + 40, yMin - 20];
+
+%Coordenadas de las gradas en el punto máximo
+gInicioMax = [xmax - 40,yMax + 20];
+gFinMax = [xmax + 40, yMax + 20];
+
+%Gráfica de las gradas
+hold on;
+plot([gInicioMin(1),gFinMin(1)],[gInicioMin(2),gFinMin(2)],'r');
+hold on;
+plot([gInicioMax(1),gFinMax(1)],[gInicioMax(2),gFinMax(2)],'r');
+
+% Graficamos los puntos iniciales
+plot(10, 290, 'o');
+plot(79, 316, 'o');
+plot(164, 160, 'o');
+plot(260, 180, 'o');
+
 
